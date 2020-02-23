@@ -1,0 +1,52 @@
+type Researcher {
+    id: ID!
+    name: String!
+    school: String!
+    group: [Group] @relation(name: "BELONGS", direction: "OUT")
+    projects: [Project] @relation(name: "WORKS_ON", direction: "OUT")
+}
+
+type Group {
+    id: ID!
+    name: String!
+    school: String!
+    initials:String!
+    researchers: [Researcher] @relation(name: "BELONGS", direction: "IN")
+    projects: [Project] @relation(name: "PROJECTS", direction: "BOTH")
+}
+
+type Project {
+    id: ID!
+    name: String!
+    researchers: [Researcher] @relation(name: "WORKS_ON", direction: "IN")
+    group: [Project] @relation(name: "PROJECTS", direction: "BOTH")
+}
+
+type School{
+    id: ID!
+    name: String!
+    faculty: String!
+}
+
+type Query {
+    facultyList: [School]
+    @cypher(
+        statement: "MATCH (s:School) WITH s WITH s.faculty AS f, COLLECT(s) AS sf RETURN sf[0] AS s"
+    )
+
+    projectBySchool(school: String!): [Project]
+    @cypher(
+        statement: "match (g:Group {school: $school})--(p:Project) return p"
+    )
+
+    researcherBySchool(school: String!): [Researcher]
+    @cypher(
+        statement: "match (r:Researcher {school: $school}) return r"
+    )
+
+    groupBySchool(school: String!): [Group]
+    @cypher(
+        statement: "match (g:Group {school: $school}) return g"
+    )
+}
+
